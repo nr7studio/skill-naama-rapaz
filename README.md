@@ -4,7 +4,7 @@ Skill do Claude para criar anúncios em tipografia cinética guiados pela locuç
 
 ## Baixar
 
-- Arquivo da skill: [skill-naama-rapaz.skill](https://github.com/nr7studio/skill-naama-rapaz/releases/latest/download/skill-naama-rapaz.skill)
+- Arquivo da skill: [skill-naama-rapaz.skill](https://github.com/nr7studio/skill-naama-rapaz/raw/main/skill-naama-rapaz.skill)
 - Pasta inteira em ZIP: [código-fonte](https://github.com/nr7studio/skill-naama-rapaz/archive/refs/heads/main.zip)
 
 ## Instalar
