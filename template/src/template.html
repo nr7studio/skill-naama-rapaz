@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Motion com Claude · preview do anúncio</title>
+<style>
+/*FONTS*/
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--or:#D97757;--or2:#F2A07E;--or3:#B4573A;--ink:#0B0A0A;--paper:#F4EFE9;--white:#fff}
+html,body{background:#0b0a0a;color:#d9d6d2;font-family:'Archivo',system-ui,sans-serif}
+body{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px;gap:12px}
+#viewport{width:100%;max-width:1280px;aspect-ratio:16/9;position:relative;overflow:hidden;border-radius:14px;background:#000;box-shadow:0 20px 80px rgba(0,0,0,.6),0 0 0 1px #2a2523}
+#stage{position:absolute;left:0;top:0;width:1280px;height:720px;transform-origin:0 0;overflow:hidden;background:var(--ink)}
+#cam{position:absolute;inset:0;perspective:1400px}
+#bg{position:absolute;inset:-80px}
+.blob{position:absolute;border-radius:50%;filter:blur(70px)}
+#blobA{left:-120px;top:-160px;width:620px;height:520px;background:radial-gradient(closest-side,rgba(217,119,87,.85),rgba(217,119,87,0))}
+#blobB{right:-140px;bottom:-200px;width:700px;height:560px;background:radial-gradient(closest-side,rgba(180,87,58,.9),rgba(180,87,58,0))}
+#dots{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.14) 1px,transparent 1.5px);background-size:26px 26px;opacity:.5}
+.scene{position:absolute;inset:0;visibility:hidden;overflow:hidden;perspective:1200px}
+.L{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.p3{perspective:1100px}
+.orbg{background:radial-gradient(ellipse at 50% 42%,#E88A68 0%,#D97757 55%,#C0603F 100%)}
+.paper{background:radial-gradient(ellipse at 50% 40%,#FFFDFB 0%,#EDE6DE 90%)}
+.t{font-family:'Anton',sans-serif;font-weight:400;line-height:1;text-transform:uppercase;white-space:nowrap;letter-spacing:.006em}
+.lab{font-family:'Archivo',sans-serif;font-weight:900;font-stretch:125%;text-transform:uppercase;white-space:nowrap;letter-spacing:.14em;line-height:1}
+.mono{font-family:'JetBrains Mono',monospace}
+.w{color:var(--white)}.k{color:var(--ink)}.o{color:var(--or)}
+.out{color:transparent;-webkit-text-stroke:2.5px rgba(255,255,255,.75)}
+.outk{color:transparent;-webkit-text-stroke:2.5px rgba(11,10,10,.8)}
+.ch{display:inline-block;transform-origin:50% 100%}
+.pd{display:inline-block;width:.2em;height:.2em;border-radius:50%;background:var(--or);margin-left:.05em}
+.glow{position:absolute;left:50%;top:50%;width:1100px;height:680px;margin:-340px 0 0 -550px;border-radius:50%;background:radial-gradient(closest-side,rgba(217,119,87,.7),rgba(217,119,87,.18) 55%,transparent);pointer-events:none}
+.dot{width:24px;height:24px;border-radius:50%;background:var(--or);box-shadow:0 0 14px 4px rgba(217,119,87,.9),0 0 70px 22px rgba(217,119,87,.45)}
+.ring{width:240px;height:240px;border-radius:50%;border:3px solid rgba(255,255,255,.55)}
+.ringK{width:560px;height:560px;border-radius:50%;border:3px solid rgba(11,10,10,.4)}
+.burst{position:absolute;left:0;top:0;overflow:visible}
+.bk{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(242,160,126,.9),rgba(242,160,126,0) 70%)}
+.laser{width:1700px;height:4px;background:#fff;box-shadow:0 0 12px #fff,0 0 34px rgba(255,255,255,.8);transform-origin:0 50%}
+.laserO{width:1120px;height:4px;background:linear-gradient(90deg,transparent,#D97757 10%,#FFE2D6 50%,#D97757 90%,transparent);box-shadow:0 0 16px rgba(217,119,87,.95);transform-origin:0 50%}
+.streak{position:absolute;height:3px;border-radius:3px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.8),transparent)}
+.ghost{font-size:560px;color:transparent;-webkit-text-stroke:3px rgba(11,10,10,.16)}
+.ha{font-size:84px}
+.stack{display:flex;flex-direction:column;align-items:center}
+.lstack{display:flex;flex-direction:column;align-items:flex-start}
+.floor{position:absolute;left:-400px;right:-400px;bottom:-330px;height:620px;background-image:linear-gradient(rgba(217,119,87,.5) 2px,transparent 2px),linear-gradient(90deg,rgba(217,119,87,.5) 2px,transparent 2px);background-size:90px 90px;transform:rotateX(74deg);transform-origin:50% 100%;-webkit-mask-image:linear-gradient(transparent 0%,#000 60%);mask-image:linear-gradient(transparent 0%,#000 60%)}
+.glass{border-radius:34px;background:linear-gradient(140deg,rgba(60,42,36,.82),rgba(18,16,16,.9) 55%,rgba(64,34,25,.85));border:1.5px solid rgba(255,255,255,.34);box-shadow:0 30px 70px rgba(0,0,0,.55),0 0 80px rgba(217,119,87,.28)}
+.player{width:440px;height:262px;position:relative;overflow:hidden}
+.pbtn{position:absolute;left:50%;top:42%;width:92px;height:92px;margin:-46px 0 0 -46px;border-radius:50%;background:var(--or);box-shadow:0 0 44px rgba(217,119,87,.85);display:grid;place-items:center}
+.pbtn::after{content:'';border-left:28px solid #fff;border-top:17px solid transparent;border-bottom:17px solid transparent;margin-left:8px}
+.ptrack{position:absolute;left:26px;right:26px;bottom:28px;height:8px;border-radius:4px;background:rgba(255,255,255,.2)}
+.pfill{position:absolute;inset:0;border-radius:4px;background:var(--or);transform-origin:0 50%}
+.ptime{position:absolute;left:26px;bottom:46px;font:500 13px 'JetBrains Mono';color:#cfc9c4}
+.bar{position:relative;width:1060px;height:210px;border-radius:105px;border:3px solid rgba(255,255,255,.6);overflow:hidden;background:rgba(18,16,16,.55);box-shadow:0 0 90px rgba(217,119,87,.25)}
+.barTxt{position:absolute;left:0;top:0;width:1060px;height:204px;display:flex;align-items:center;justify-content:center;font-size:158px}
+.barFill{position:absolute;left:0;top:0;bottom:0;width:0;overflow:hidden;background:linear-gradient(90deg,#C8623F,#D97757 60%,#F2A07E)}
+.pct{position:absolute;right:112px;top:160px;font:700 34px 'JetBrains Mono';color:#fff}
+.card{width:760px;height:372px;border-radius:20px;background:linear-gradient(#fbfaf8,#ece7e1);box-shadow:0 40px 80px rgba(0,0,0,.6);position:relative;overflow:hidden;font-family:'JetBrains Mono',monospace;color:#222}
+.cardTop{display:flex;align-items:center;gap:14px;padding:14px 20px;font-size:15px;font-weight:700;border-bottom:1px solid #d9d2ca}
+.cls{width:26px;height:26px;border-radius:50%;background:#c9c2ba;display:grid;place-items:center;font:700 15px 'JetBrains Mono';color:#fff}
+.rows{padding:16px 22px;display:flex;flex-direction:column;gap:19px}
+.row{display:flex;align-items:center;gap:16px;font-size:14px}
+.lbl{width:112px;color:#6a625b}
+.track{flex:1;height:18px;position:relative;border-radius:9px;background:#e0d9d1}
+.tb{position:absolute;top:2px;height:14px;border-radius:7px;transform-origin:0 50%}
+.kf{position:absolute;top:3px;width:12px;height:12px;margin-left:-6px;background:#151312}
+.ph{position:absolute;left:150px;top:56px;bottom:14px;width:2px;background:var(--or);box-shadow:0 0 8px rgba(217,119,87,.8)}
+.shard{position:absolute;left:0;top:0}
+.tile{position:absolute;width:190px;height:190px;display:grid;place-items:center;border-radius:38px;transform-origin:50% 100%}
+.tile svg{width:100px;height:100px}
+.tx{position:absolute;left:-14px;right:-14px;top:50%;height:12px;margin-top:-6px;border-radius:6px;background:var(--or);box-shadow:0 0 22px rgba(217,119,87,.9);transform-origin:0 50%}
+.strike{position:absolute;left:-40px;right:-40px;top:47%;height:26px;background:#fff;transform-origin:0 50%;box-shadow:0 0 26px rgba(255,255,255,.75)}
+.gb{position:absolute;left:0;right:0;transform-origin:0 50%}
+.half{position:absolute;left:-200px;right:-200px;height:900px;background:radial-gradient(ellipse at 50% 42%,#E88A68 0%,#D97757 55%,#C0603F 100%)}
+
+.sk{height:26px;border-radius:8px;background:rgba(255,255,255,.3);margin-bottom:26px;transform-origin:0 50%}
+.send{position:absolute;right:26px;bottom:26px;width:72px;height:72px;border-radius:50%;background:var(--or);box-shadow:0 0 30px rgba(217,119,87,.7);display:grid;place-items:center}
+.send::after{content:'';border-bottom:24px solid #fff;border-left:15px solid transparent;border-right:15px solid transparent;margin-bottom:6px}
+.back{position:absolute;left:50%;top:50%;width:1500px;height:760px;margin:-380px 0 0 -750px;background:radial-gradient(closest-side,rgba(11,10,10,.94),rgba(11,10,10,.7) 60%,transparent)}
+.chip{background:rgba(217,119,87,.9);color:#0B0A0A;border-radius:6px;padding:0 4px;margin:0 -4px}
+.ico{position:absolute;width:168px;height:168px;border-radius:44px;display:grid;place-items:center}
+.vc{position:absolute;width:200px;height:112px;border-radius:14px;background:linear-gradient(#3a3532,#26221f);border:1px solid rgba(255,255,255,.14);overflow:hidden}
+.vc::before{content:'';position:absolute;left:84px;top:30px;border-left:30px solid #8d857e;border-top:19px solid transparent;border-bottom:19px solid transparent}
+.vc::after{content:'';position:absolute;left:16px;right:60px;bottom:14px;height:8px;border-radius:4px;background:#5a534d}
+.tlw{position:relative;width:1800px;height:720px;transform:rotateX(56deg) rotateZ(-8deg) scale(1.2)}
+.tlr{position:absolute;left:0;right:0;height:44px;background:rgba(255,255,255,.05)}
+.tlb{position:absolute;top:6px;height:32px;border-radius:5px;transform-origin:0 50%}
+.tld{position:absolute;top:14px;width:16px;height:16px;margin-left:-8px;background:#fff;transform:rotate(45deg)}
+.tlp{position:absolute;top:-10px;bottom:0;width:4px;background:var(--or);box-shadow:0 0 14px var(--or)}
+.tlt{position:absolute;top:8px;font:500 22px 'JetBrains Mono';color:#a8a09a}
+.win{width:470px;height:360px;border-radius:18px;background:#2a2623;border:1.5px solid rgba(255,255,255,.25);box-shadow:0 40px 90px rgba(0,0,0,.7);position:relative;overflow:hidden}
+.win i{position:absolute;display:block;background:#4a443f;border-radius:5px}
+.ctl{position:absolute;border-radius:9px;background:#3a3532;border:1px solid rgba(255,255,255,.16)}
+.pf{width:540px;padding:34px 36px 36px;position:relative;font-family:'Archivo',sans-serif;color:#fff}
+.pf .av{width:132px;height:132px;border-radius:50%;background-size:cover;box-shadow:0 0 0 4px #121010,0 0 0 8px var(--or)}
+.pf .nm{font:900 36px 'Archivo';display:flex;align-items:center;gap:10px}
+.pf .sub{font:500 19px 'Archivo';color:#cfc9c4;margin-top:6px}
+.pf .st{display:flex;gap:26px;margin-top:22px;font:500 19px 'Archivo';color:#cfc9c4}
+.pf .st b{color:#fff;font-weight:900}
+.pf .bio{margin-top:18px;font:500 19px/1.42 'Archivo';color:#e9e4df}
+.pf .lk{display:inline-flex;align-items:center;gap:8px;margin-top:10px;font:800 20px 'Archivo';color:#9db9ff;padding:4px 10px;margin-left:-10px;border-radius:10px}
+.pf .fw{margin-top:22px;height:62px;border-radius:14px;background:var(--or);display:grid;place-items:center;font:900 24px 'Archivo';position:relative;overflow:hidden}
+.pf .fw span{position:absolute}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+#vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 58%,rgba(0,0,0,.42) 100%)}
+#grain{position:absolute;inset:0;width:100%;height:100%;opacity:.08;mix-blend-mode:overlay;pointer-events:none}
+#hud{width:100%;max-width:1280px;display:flex;flex-direction:column;gap:10px}
+.r1{display:flex;align-items:center;gap:12px}
+#scrub{flex:1;accent-color:#D97757}
+#tc{font:600 13px 'JetBrains Mono';min-width:150px;text-align:right;color:#fff}
+button{background:#1c1917;color:#eee;border:1px solid #332d2a;border-radius:8px;padding:7px 12px;font:700 13px 'Archivo';cursor:pointer}
+button:hover{border-color:#D97757}
+button.on{background:#D97757;border-color:#D97757;color:#fff}
+#play{min-width:92px}
+.r2{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:13px}
+.sep{width:1px;height:22px;background:#332d2a;margin:0 4px}
+#info{background:#141211;border:1px solid #26211f;border-radius:10px;padding:12px 16px}
+#ifala{font:700 18px 'Archivo';color:#fff}
+#ifala small{font:600 12px 'JetBrains Mono';color:#D97757;margin-right:8px}
+#idesc{margin-top:6px;font-size:14px;line-height:1.5;color:#b9b2ac}
+#chips{display:flex;flex-wrap:wrap;gap:6px}
+#chips button{padding:4px 9px;font-size:12px;font-weight:500}
+#tap{position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.55);z-index:20;cursor:pointer}
+#tap div{font:900 22px 'Archivo';font-stretch:125%;letter-spacing:.08em;color:#fff;background:#D97757;padding:16px 28px;border-radius:999px}
+@media (max-width:640px){#tc{min-width:0}}
+</style>
+</head>
+<body>
+<svg id="fx" width="0" height="0" style="position:absolute"><defs></defs></svg>
+
+<div id="viewport"><div id="stage"><div id="cam">
+<div id="bg"><div class="blob" id="blobA"></div><div class="blob" id="blobB"></div><div id="dots"></div></div>
+
+<!-- 1 ignição + RAPAAAAZ. -->
+<section class="scene" id="s1">
+  <div class="L" id="s1streaks"></div>
+  <div class="L"><svg class="burst" id="s1mark" width="1280" height="720" viewBox="-640 -360 1280 720"><g></g></svg></div>
+  <div class="L"><svg class="burst" id="s1burst" width="1280" height="720" viewBox="-640 -360 1280 720"><g></g></svg></div>
+  <div class="glow" id="s1glow"></div>
+  <div class="L"><div class="ring" id="s1ring"></div></div>
+  <div class="L p3" id="s1cam"><div class="t w" id="s1word" style="font-size:262px">RAPAAAAZ<span class="pd" id="s1pd"></span></div></div>
+  <div class="L"><div class="dot" id="s1dot"></div></div>
+</section>
+
+<!-- 2 NEM → FERRANDO, (laranja) -->
+<section class="scene orbg" id="s2">
+  <div class="L" id="s2ghost"><div class="t ghost" style="transform:translateX(420px)">NEM FERRANDO NEM FERRANDO</div></div>
+  <div class="L"><svg class="burst" id="s2burst" width="1280" height="720" viewBox="-640 -360 1280 720"><g></g></svg></div>
+  <div class="L p3" id="s2cam"><div id="s2world" style="position:absolute;inset:0">
+    <div class="L p3"><div class="t k" id="s2nem" style="font-size:430px">NEM</div></div>
+    <div class="L" style="left:1500px;right:auto;width:1280px"><div class="t k" id="s2fer" style="font-size:262px">FERRANDO,</div></div>
+  </div></div>
+  <div class="L"><div class="laser" id="s2laser"></div></div>
+</section>
+
+<!-- 3 CARA. / recomposição / HA HA (papel) -->
+<section class="scene paper" id="s3"><div class="L p3" id="s3cam">
+  <div class="L"><div class="ringK" id="s3ring"></div></div>
+  <div class="L"><svg class="burst" id="s3burst" width="1280" height="720" viewBox="-640 -360 1280 720"><g></g></svg></div>
+  <div class="L"><div class="t k" id="s3nem" style="font-size:170px">NEM</div></div>
+  <div class="L"><div class="t o" id="s3fer" style="font-size:150px">FERRANDO,</div></div>
+  <div class="L"><div class="t k" id="s3cara" style="font-size:390px">CARA<span class="pd" id="s3pd"></span></div></div>
+  <div class="L"><div class="t o ha" id="s3ha1">HA</div></div>
+  <div class="L"><div class="t k ha" id="s3ha2">HA</div></div>
+  <div class="L"><div class="t o ha" id="s3ha3" style="font-size:64px">HA</div></div>
+</div>
+  <div class="half" id="s3hA" style="bottom:50%"></div><div class="half" id="s3hB" style="top:50%"></div>
+</section>
+
+<!-- 4 DÁ PRA ACREDITAR -->
+<section class="scene" id="s4">
+  <div class="floor" id="s4floor"></div>
+  <div class="L" id="s4bk"></div>
+  <div class="glow" id="s4glow"></div>
+  <div class="L p3" id="s4cam"><div id="s4stack" class="stack">
+    <div class="t w" id="s4a" style="font-size:250px">DÁ PRA</div>
+    <div style="position:relative;margin-top:-6px"><div class="t out" id="s4b" style="font-size:190px">ACREDITAR</div>
+      <div id="s4fill" style="position:absolute;left:0;top:0;bottom:0;width:0;overflow:hidden"><div class="t o" style="font-size:190px">ACREDITAR</div></div></div>
+  </div></div>
+</section>
+
+<!-- 5 QUE ESSE VÍDEO AQUI -->
+<section class="scene" id="s5"><div class="L p3" id="s5cam">
+  <div class="glow" id="s5glow" style="left:74%"></div>
+  <div class="L"><div id="s5txt" class="lstack" style="transform:translateX(-270px)">
+    <div class="lab w" id="s5a" style="font-size:40px;margin-bottom:10px">QUE ESSE</div>
+    <div class="t w" id="s5b" style="font-size:230px">VÍDEO</div>
+    <div class="t o" id="s5c" style="font-size:230px;margin-top:-22px">AQUI</div>
+  </div></div>
+  <div class="L p3"><div class="player glass" id="s5card" style="transform:translate(330px,-10px)"><div class="pbtn" id="s5btn"></div><span class="ptime">00:05 / 00:18</span><div class="ptrack" id="s5track"><div class="pfill" id="s5fill"></div></div></div></div>
+  <svg class="burst" width="1280" height="720" viewBox="0 0 1280 720">
+    <defs><marker id="ah" markerWidth="10" markerHeight="10" refX="6" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#D97757"/></marker></defs>
+    <path id="s5arrow" d="M560 520 C 640 590, 720 520, 770 430" fill="none" stroke="#D97757" stroke-width="6" stroke-linecap="round" marker-end="url(#ah)"/>
+  </svg>
+  <div class="L"><svg id="s5cur" width="40" height="50" viewBox="0 0 34 42"><path d="M2 2 L2 34 L10 26 L16 40 L22 37 L16 24 L28 24 Z" fill="#fff" stroke="#000" stroke-width="2.5" stroke-linejoin="round"/></svg></div>
+</div></section>
+
+<!-- 6 FOI FEITO INTEIRINHO (barra de progresso) -->
+<section class="scene" id="s6"><div class="L p3" id="s6cam">
+  <div class="glow" id="s6glow"></div>
+  <div class="L"><div class="lab w" id="s6foi" style="font-size:52px;transform:translateY(-178px)">FOI FEITO</div></div>
+  <div class="L"><div id="s6barw" style="position:relative;transform:translateY(20px)">
+    <div class="bar" id="s6bar"><div class="t out barTxt">INTEIRINHO</div><div class="barFill" id="s6fill"><div class="t k barTxt">INTEIRINHO</div></div></div>
+  </div></div>
+  <div class="L"><div class="mono" id="s6pct" style="font:700 44px 'JetBrains Mono';color:#fff;transform:translate(430px,-178px)">0%</div></div>
+  <div class="L"><svg class="burst" id="s6burst" width="1280" height="720" viewBox="-640 -360 1280 720"><g></g></svg></div>
+</div>
+  <div class="L"><div class="dot" id="s6dot"></div></div>
+</section>
+
+<!-- 7 PELO CLAUDE? -->
+<section class="scene" id="s7">
+  <div class="glow" id="s7glow"></div>
+  <div class="L" id="s7bk"></div>
+  <div class="L"><div class="ring" id="s7r1"></div></div>
+  <div class="L"><div class="ring" id="s7r2" style="border-color:rgba(217,119,87,.8)"></div></div>
+  <div class="L"><svg class="burst" id="s7rays" width="1280" height="720" viewBox="-640 -360 1280 720"><g></g></svg></div>
+  <div class="L p3" id="s7cam">
+    <div class="L"><div class="lab w" id="s7pelo" style="font-size:54px;transform:translateY(-200px)">PELO</div></div>
+    <div class="L"><div class="t w" id="s7cl" style="font-size:300px;transform:translateY(30px)">CLAUDE<span class="o" id="s7q" style="display:inline-block;transform-origin:50% 80%">?</span></div></div>
+  </div>
+  <div class="L"><div class="dot" id="s7dot"></div></div>
+</section>
+
+<!-- 8 E ANTES QUE VOCÊ PERGUNTE: -->
+<section class="scene paper" id="s8"><div class="L p3" id="s8cam">
+  <div class="L" id="s8qw"><div class="t o" id="s8q" style="font-size:820px;transform:translate(400px,10px) rotate(8deg)">?</div></div>
+  <div class="L" id="s8rain"></div>
+  <div class="L"><div id="s8txt" class="lstack" style="transform:translateX(-230px)">
+    <div class="t k" id="s8a" style="font-size:96px;margin-bottom:62px">E ANTES QUE</div>
+    <div class="t k" id="s8b" style="font-size:228px">VOCÊ</div>
+    <div class="t o" id="s8c" style="font-size:158px;margin-top:-12px">PERGUNTE:</div>
+  </div></div>
+</div></section>
+
+<!-- 9 NÃO. -->
+<section class="scene orbg" id="s9">
+  <div id="s9blk" style="position:absolute;inset:0;background:#0B0A0A;opacity:0"></div>
+  <div class="L"><svg class="burst" id="s9burst" width="1280" height="720" viewBox="-640 -360 1280 720"><g></g></svg></div>
+  <div class="L p3" id="s9cam">
+    <div class="L"><div class="t k" id="s9g1" style="font-size:440px;clip-path:inset(0 0 62% 0)">NÃO.</div></div>
+    <div class="L"><div class="t k" id="s9g2" style="font-size:440px;clip-path:inset(38% 0 30% 0)">NÃO.</div></div>
+    <div class="L"><div class="t k" id="s9g3" style="font-size:440px;clip-path:inset(70% 0 0 0)">NÃO.</div></div>
+    <div class="L"><div class="t k" id="s9no" style="font-size:440px">NÃO.</div></div>
+  </div>
+</section>
+
+<!-- 10 EU NÃO ABRI -->
+<section class="scene" id="s10">
+  <div class="glow" id="s10glow"></div>
+  <div class="L p3" id="s10big">
+    <div class="L"><div style="position:absolute;left:0;right:0;bottom:50%;height:330px;overflow:hidden;display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px"><div class="t w" id="s10eu" style="font-size:250px">EU <span class="o">NÃO</span></div></div></div>
+    <div class="L"><div style="position:absolute;left:0;right:0;top:50%;height:330px;overflow:hidden;display:flex;align-items:flex-start;justify-content:center;padding-top:12px"><div class="t w" id="s10abri" style="font-size:250px">ABRI</div></div></div>
+    <div class="L"><div class="laserO" id="s10line"></div></div>
+    <div class="L"><div class="dot" id="s10dot"></div></div>
+  </div>
+</section>
+
+<!-- 11 O AFTER EFFECTS (janela destruída) / NEM NENHUM PROGRAMA DE EDIÇÃO. -->
+<section class="scene" id="s11">
+  <div class="glow" id="s11glow" style="top:58%"></div>
+  <div class="L p3" id="s11cam">
+    <div class="L p3" id="s11cardw"><div class="card" id="s11card">
+      <div class="cardTop"><span class="cls" id="s11cls">×</span><span>Linha do tempo · Comp 1</span><span style="margin-left:auto">00:00:00:00</span></div>
+      <div class="rows">
+        <div class="row"><span class="lbl">◆ Título</span><div class="track"><div class="tb" style="left:8%;width:52%;background:#c9c2ba"></div><i class="kf" style="left:8%"></i><i class="kf" style="left:60%"></i></div></div>
+        <div class="row"><span class="lbl">◆ Forma 1</span><div class="track"><div class="tb" style="left:22%;width:62%;background:#F2A07E"></div><i class="kf" style="left:22%"></i><i class="kf" style="left:48%"></i><i class="kf" style="left:84%"></i></div></div>
+        <div class="row"><span class="lbl">◆ Forma 2</span><div class="track"><div class="tb" style="left:14%;width:58%;background:#D97757"></div><i class="kf" style="left:14%"></i><i class="kf" style="left:40%"></i><i class="kf" style="left:72%"></i></div></div>
+        <div class="row"><span class="lbl">◆ Câmera</span><div class="track"><div class="tb" style="left:4%;width:86%;background:#c9c2ba"></div><i class="kf" style="left:4%"></i><i class="kf" style="left:90%"></i></div></div>
+        <div class="row"><span class="lbl">◆ Nulo 1</span><div class="track"><div class="tb" style="left:30%;width:40%;background:#ddd6ce"></div><i class="kf" style="left:30%"></i><i class="kf" style="left:70%"></i></div></div>
+      </div>
+      <div class="ph" id="s11ph"></div>
+    </div></div>
+    <div class="L p3" id="s11shards"></div>
+    <div class="L p3" id="s11tiles"></div>
+    <div class="L"><svg class="burst" id="s11burst" width="1280" height="720" viewBox="-640 -360 1280 720"><g></g></svg></div>
+    <div class="L"><svg id="s11cur" width="40" height="50" viewBox="0 0 34 42"><path d="M2 2 L2 34 L10 26 L16 40 L22 37 L16 24 L28 24 Z" fill="#fff" stroke="#000" stroke-width="2.5" stroke-linejoin="round"/></svg></div>
+  </div>
+  <div class="t w" id="s11h1" style="position:absolute;left:60px;top:44px;font-size:96px">O AFTER EFFECTS</div>
+  <div id="s11h2" style="position:absolute;left:60px;top:44px;display:flex;gap:26px"><div class="t w" id="s11h2a" style="font-size:104px">NEM</div><div class="t o" id="s11h2b" style="font-size:104px">NENHUM</div></div>
+  <div id="s11h3" style="position:absolute;left:60px;bottom:34px;display:flex;flex-direction:column;align-items:flex-start"><div class="t w" id="s11p" style="font-size:150px">PROGRAMA</div><div class="t o" id="s11e" style="font-size:150px;margin-top:-8px">DE EDIÇÃO.</div></div>
+</section>
+
+<!-- 12 E TAMBÉM NÃO FOI -->
+<section class="scene" id="s12">
+  <div class="glow" id="s12glow"></div>
+  <div class="L"><div class="laserO" id="s12line" style="transform-origin:50% 50%"></div></div>
+  <div class="L p3" id="s12cam">
+    <div class="L"><div class="t out" id="s12e1" style="font-size:290px">NÃO FOI</div></div>
+    <div class="L"><div class="t out" id="s12e2" style="font-size:290px">NÃO FOI</div></div>
+    <div class="L"><div class="t out" id="s12e3" style="font-size:290px">NÃO FOI</div></div>
+    <div class="L"><div class="t out" id="s12e4" style="font-size:290px">NÃO FOI</div></div>
+    <div class="L"><div class="t w" id="s12nf" style="font-size:290px">NÃO FOI</div></div>
+    <div class="L"><div class="lab o" id="s12tb" style="font-size:50px">E TAMBÉM</div></div>
+  </div>
+  <div class="L"><div class="dot" id="s12dot"></div></div>
+  <div id="s12bars"></div>
+</section>
+
+<!-- 13 HIGGSFIELD, NEM KATANA. -->
+<section class="scene orbg" id="s13">
+  <div id="s13blk" style="position:absolute;inset:0;background:#0B0A0A;opacity:0"></div>
+  <div class="L" id="s13ghost"><div class="t ghost" style="font-size:620px">NÃO NÃO NÃO</div></div>
+  <div class="L p3" id="s13cam">
+    <div class="L"><div id="s13hw" style="position:relative;transform:translateY(-125px)"><div id="s13hA" style="clip-path:polygon(0 0,100% 0,100% 44%,0 56%)"><div class="t k" id="s13h" style="font-size:220px">HIGGSFIELD,</div></div><div id="s13hB" style="position:absolute;inset:0;clip-path:polygon(0 56%,100% 44%,100% 100%,0 100%)"><div class="t k" style="font-size:220px">HIGGSFIELD,</div></div><div class="strike" id="s13s1" style="transform:rotate(-2.6deg)"></div></div></div>
+    <div class="L"><div id="s13kw" style="position:relative;transform:translateY(135px)"><div id="s13kA" style="clip-path:polygon(0 0,100% 0,100% 28%,0 72%)"><div class="t k" id="s13k" style="font-size:200px">NEM KATANA.</div></div><div id="s13kB" style="position:absolute;inset:0;clip-path:polygon(0 72%,100% 28%,100% 100%,0 100%)"><div class="t k" style="font-size:200px">NEM KATANA.</div></div></div></div>
+    <div class="L"><svg class="burst" id="s13burst" width="1280" height="720" viewBox="-640 -360 1280 720"><g></g></svg></div>
+  </div>
+  <div class="L"><div class="laser" id="s13slash" style="height:5px"></div></div>
+  <div class="L"><svg class="burst" id="s13mark" width="1280" height="720" viewBox="-640 -360 1280 720"><g></g></svg></div>
+  <div class="L"><div class="dot" id="s13dot"></div></div>
+</section>
+
+<!-- A EU DISSE PRO CLAUDE -->
+<section class="scene" id="sA">
+  <div class="glow" id="sAglow" style="left:72%"></div>
+  <div class="L p3" id="sAcam">
+    <div class="L"><div class="lstack" style="transform:translateX(-225px)">
+      <div class="t w" id="sA1" style="font-size:142px">EU DISSE</div>
+      <div class="t o" id="sA2" style="font-size:142px;margin-top:-6px">PRO CLAUDE</div>
+      <div class="lab w" id="sA3" style="font-size:26px;margin-top:22px">COMO EU QUERIA O VÍDEO,</div>
+    </div></div>
+    <div class="L p3"><div class="glass" id="sAcard" style="width:420px;height:320px;position:relative;padding:36px"><div class="sk" style="width:88%"></div><div class="sk" style="width:70%"></div><div class="sk" style="width:46%"></div><div class="send" id="sAsend"></div></div></div>
+  </div>
+  <div class="L p3" id="sAcam2"><div class="L" id="sAshapes"></div>
+    <div class="L"><div class="stack"><div class="lab w" id="sA4" style="font-size:40px;margin-bottom:14px">E ELE TRANSFORMOU ISSO</div><div class="t w" id="sA5" style="font-size:170px">NESSA</div><div class="t o" id="sA6" style="font-size:240px;margin-top:-12px">ANIMAÇÃO.</div></div></div></div>
+</section>
+<!-- B SO QUE NAO ADIANTA -->
+<section class="scene paper" id="sB"><div class="L p3" id="sBcam"><div class="stack">
+  <div class="lab k" id="sB1" style="font-size:46px;margin-bottom:14px">SÓ QUE</div>
+  <div class="t k" id="sB2" style="font-size:210px">NÃO ADIANTA</div>
+  <div class="t o" id="sB3" style="font-size:130px;margin-top:-4px">CHEGAR E ESCREVER:</div>
+</div></div></section>
+<!-- C pedido digitado -->
+<section class="scene" id="sC"><div class="glow" id="sCglow"></div><div class="L p3" id="sCcam">
+  <div class="L" id="sCicons"></div>
+  <div class="L"><div class="glass" id="sCbox" style="width:1100px;padding:36px 44px 42px;transform:translateY(96px)"><div class="lab o" style="font-size:22px;margin-bottom:20px;letter-spacing:.2em">PEDIDO</div><div id="sCtxt" style="font:700 38px/1.5 'JetBrains Mono',monospace;color:#fff;white-space:pre-wrap;min-height:172px"></div></div></div>
+</div></section>
+<!-- D igual ao de todo mundo -->
+<section class="scene" id="sD"><div class="L p3" id="sDcam"><div id="sDgrid" style="position:absolute;inset:0"></div></div>
+  <div class="back" id="sDback"></div>
+  <div class="L"><div class="stack" id="sDa"><div class="t w" id="sDa1" style="font-size:250px">SE PEDIR</div><div class="t o" id="sDa2" style="font-size:250px;margin-top:-12px">ASSIM,</div></div></div>
+  <div class="L"><div class="stack"><div class="lab w" id="sD1" style="font-size:42px;margin-bottom:16px">SAI UM VÍDEO</div><div class="t w" id="sD2" style="font-size:210px">IGUAL AO DE</div><div class="t o" id="sD3" style="font-size:210px;margin-top:-10px">TODO MUNDO.</div></div></div>
+</section>
+<!-- E olha as letras -->
+<section class="scene orbg" id="sE"><div class="L p3" id="sEcam">
+  <div class="L"><div class="lab k" id="sE1" style="font-size:50px;transform:translateY(-215px)">AGORA OLHA</div></div>
+  <div class="L"><div class="t k" id="sE2" style="font-size:270px">AS LETRAS</div></div>
+  <div class="L"><div class="lab k" id="sE3" style="font-size:50px;transform:translateY(210px)">DESSE AQUI</div></div>
+</div></section>
+<!-- F espera a transicao -->
+<section class="scene" id="sF"><div class="glow" id="sFglow"></div><div class="L p3" id="sFcam">
+  <div class="L"><svg class="burst" width="1280" height="720" viewBox="-640 -360 1280 720"><circle id="sFring" r="318" fill="none" stroke="#D97757" stroke-width="6" stroke-linecap="round" transform="rotate(-90)"/></svg></div>
+  <div class="L"><div class="stack"><div class="lab w" id="sF1" style="font-size:44px;margin-bottom:12px">E ESPERA A</div><div class="t w" id="sF2" style="font-size:180px">TRANSIÇÃO<span class="o" id="sFd">...</span></div></div></div>
+</div></section>
+<!-- G ta de brincadeira -->
+<section class="scene paper" id="sG"><div class="L p3" id="sGcam">
+  <div class="L"><div id="sGstar" style="width:1000px;height:1000px;background:#D97757"></div></div>
+  <div class="L"><div class="stack"><div class="t k" id="sG1" style="font-size:150px">TÁ DE</div><div class="t k" id="sG2" style="font-size:212px;margin-top:-6px">BRINCADEIRA</div><div class="t k" id="sG3" style="font-size:212px;margin-top:-10px">COMIGO?!</div></div></div>
+</div></section>
+<!-- H jeito tradicional -->
+<section class="scene" id="sH"><div class="L p3" style="opacity:.6"><div class="tlw" id="sHtl"></div></div><div class="back" style="opacity:.75"></div>
+  <div class="L p3" id="sHcam"><div class="stack"><div class="lab w" id="sH1" style="font-size:44px;margin-bottom:14px">PENSA EM FAZER ISSO</div><div class="t w" id="sH2" style="font-size:200px">DO JEITO</div><div class="t out" id="sH3" style="font-size:200px;margin-top:-8px">TRADICIONAL.</div></div></div>
+</section>
+<!-- I programa pesado / mil botoes / horas -->
+<section class="scene" id="sI">
+  <div class="L p3" id="sI1"><div class="glow" style="left:74%"></div>
+    <div class="L"><div class="lstack" style="transform:translateX(-270px)"><div class="t w" id="sIa" style="font-size:150px">PROGRAMA</div><div class="t o" id="sIb" style="font-size:150px;margin-top:-6px">PESADO.</div></div></div>
+    <div class="L p3"><div class="win" id="sIwin"><i style="left:0;right:0;top:0;height:34px;border-radius:0;background:#1c1917"></i><i style="left:12px;top:46px;width:44px;bottom:96px"></i><i style="left:68px;top:46px;right:150px;bottom:96px;background:#171412"></i><i style="right:12px;top:46px;width:126px;height:60px"></i><i style="right:12px;top:116px;width:126px;height:60px"></i><i style="right:12px;top:186px;width:126px;bottom:96px"></i><i style="left:12px;right:12px;bottom:12px;height:72px;background:#3a3532"></i><i style="left:24px;bottom:52px;width:260px;height:14px;background:#D97757"></i><i style="left:90px;bottom:26px;width:300px;height:14px;background:#8d857e"></i></div></div></div>
+  <div class="L p3" id="sI2"><div id="sIbtns" style="position:absolute;inset:0"></div><div class="back" style="opacity:.8"></div><div class="L"><div class="t w" id="sIc" style="font-size:232px">MIL BOTÕES.</div></div></div>
+  <div class="L p3" id="sI3"><div class="glow" style="left:26%"></div>
+    <div class="L"><div id="sIclock" style="width:360px;height:360px;border-radius:50%;border:10px solid #fff;position:relative;transform:translateX(-400px)"><div id="sIh" style="position:absolute;left:50%;top:50%;width:12px;height:100px;margin:-100px 0 0 -6px;background:#fff;border-radius:6px;transform-origin:50% 100%"></div><div id="sIm" style="position:absolute;left:50%;top:50%;width:8px;height:150px;margin:-150px 0 0 -4px;background:#D97757;border-radius:4px;transform-origin:50% 100%"></div><div style="position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px;border-radius:50%;background:#D97757"></div></div></div>
+    <div class="L"><div class="lstack" style="transform:translateX(165px)"><div class="t o" id="sId" style="font-size:290px">HORAS</div><div class="t w" id="sIe" style="font-size:90px;margin-top:-4px">PRA CADA SEGUNDO.</div></div></div></div>
+</section>
+<!-- J esperar ficar pronto -->
+<section class="scene" id="sJ"><div class="L p3" style="opacity:.4"><div class="tlw" id="sJtl"></div></div><div class="back" style="opacity:.8"></div><div class="L p3" id="sJcam"><div class="stack">
+  <div class="lab w" id="sJ1" style="font-size:46px;margin-bottom:12px">E DEPOIS...</div>
+  <div class="t w" id="sJ2" style="font-size:210px">ESPERAR</div>
+  <div class="t out" id="sJ3" style="font-size:150px;margin-top:-6px">FICAR PRONTO.</div>
+  <div id="sJbar" style="width:820px;height:26px;border-radius:13px;background:rgba(255,255,255,.18);margin-top:34px;position:relative;overflow:hidden"><div id="sJfill" style="position:absolute;inset:0;background:#D97757;transform-origin:0 50%"></div></div>
+  <div id="sJeta" style="font:700 30px 'JetBrains Mono',monospace;color:#fff;margin-top:16px">2% · faltam 03:59:59</div>
+</div></div></section>
+<!-- K aqui? eu so precisei saber como pedir -->
+<section class="scene orbg" id="sK"><div id="sKblk" style="position:absolute;inset:0;background:#0B0A0A;opacity:0"></div><div class="glow" id="sKglow"></div>
+  <div class="L p3" id="sKcam"><div class="L"><div class="t k" id="sK1" style="font-size:470px">AQUI?</div></div>
+  <div class="L"><div class="stack"><div class="lab w" id="sK2" style="font-size:46px;margin-bottom:12px">EU SÓ PRECISEI</div><div class="t w" id="sK3" style="font-size:230px">SABER</div><div class="t o" id="sK4" style="font-size:205px;margin-top:-10px">COMO PEDIR.</div></div></div></div>
+</section>
+<!-- L da primeira ideia ao ultimo segundo -->
+<section class="scene" id="sL"><div class="glow" id="sLglow"></div>
+  <div id="sLworld" style="position:absolute;left:0;top:0;width:2700px;height:720px">
+    <div id="sLline" style="position:absolute;left:330px;top:548px;width:2060px;height:6px;border-radius:3px;background:linear-gradient(90deg,#D97757,#F2A07E);transform-origin:0 50%;box-shadow:0 0 18px rgba(217,119,87,.8)"></div>
+    <div id="sLbulb" style="position:absolute;left:270px;top:488px;width:126px;height:126px;border-radius:50%;background:#D97757;box-shadow:0 0 60px rgba(217,119,87,.9);display:grid;place-items:center"><div style="width:44px;height:44px;border-radius:50%;background:#fff"></div></div>
+    <div id="sLend" style="position:absolute;left:2330px;top:488px;width:126px;height:126px;border-radius:50%;background:#fff;display:grid;place-items:center;font:700 30px 'JetBrains Mono',monospace;color:#0B0A0A">1:11</div>
+    <div id="sLdots"></div>
+    <div class="lstack" style="position:absolute;left:150px;top:150px"><div class="t w" id="sL1" style="font-size:150px">DA PRIMEIRA</div><div class="t o" id="sL2" style="font-size:190px;margin-top:-10px">IDEIA</div></div>
+    <div class="lstack" style="position:absolute;left:1560px;top:150px"><div class="t w" id="sL3" style="font-size:150px">AO ÚLTIMO</div><div class="t o" id="sL4" style="font-size:190px;margin-top:-10px">SEGUNDO,</div></div>
+  </div>
+  <div class="lab w" id="sL0" style="position:absolute;left:150px;top:74px;font-size:40px">E ESSE VÍDEO,</div>
+</section>
+<!-- M foi feito so com o Claude -->
+<section class="scene orbg" id="sM"><div id="sMblk" style="position:absolute;inset:0;background:#0B0A0A;opacity:0"></div><div class="glow" id="sMglow"></div>
+  <div class="L p3" id="sMcam"><div class="L"><div class="stack" id="sMst"><div class="lab k" id="sM1" style="font-size:48px;margin-bottom:8px">FOI FEITO</div><div class="t k" id="sM2" style="font-size:190px">SÓ COM O</div><div class="t k" id="sM3" style="font-size:330px;margin-top:-14px">CLAUDE.</div></div></div>
+  <div class="L"><div style="display:flex;gap:.22em;font-size:225px"><div class="t w" id="sM4">SÓ O</div><div class="t o" id="sM5">CLAUDE.</div></div></div>
+  <div class="L"><div class="laserO" id="sMline" style="transform-origin:50% 50%"></div></div></div>
+</section>
+<!-- N PUUUUUTS -->
+<section class="scene" id="sN"><div class="glow" id="sNglow"></div><div class="L p3" id="sNcam"><div class="t w" id="sN1" style="font-size:262px">PUUUUUTS<span class="pd" id="sNpd"></span></div></div></section>
+<!-- O CTA + perfil -->
+<section class="scene" id="sO"><div class="glow" id="sOglow"></div>
+  <div class="L p3" id="sOa"><div class="stack"><div class="lab w" id="sO1" style="font-size:40px;margin-bottom:14px">SE VOCÊ QUISER SABER O</div><div class="t o" id="sO2" style="font-size:196px">PASSO A PASSO</div><div class="lab w" id="sO3" style="font-size:40px;margin-top:10px">PRA CRIAR ESSES VÍDEOS,</div></div></div>
+  <div class="L p3" id="sOb">
+    <div class="L"><div class="lstack" id="sOt1" style="transform:translateX(-320px)"><div class="t w" id="sO4" style="font-size:190px">SEGUE</div><div class="t o" id="sO5" style="font-size:118px;margin-top:-6px">MEU PERFIL</div></div></div>
+    <div class="L"><div class="lstack" id="sOt2" style="transform:translateX(-320px)"><div class="lab w" id="sO6" style="font-size:34px;margin-bottom:10px">E COMENTA</div><div class="t o" id="sO7" style="font-size:140px">“CLAUDE”</div><div class="t w" id="sO8" style="font-size:88px;margin-top:-4px">QUE TE MANDO.</div></div></div>
+    <div class="L p3"><div class="pf glass" id="sOcard" style="zoom:1.08;transform:translateX(290px)">
+      <div style="display:flex;gap:26px;align-items:center"><div class="av" style="background-image:url(/*AVATAR*/)"></div><div><div class="nm">naama.ia <svg width="30" height="30" viewBox="0 0 30 30"><circle cx="15" cy="15" r="14" fill="#3B9BF5"/><path d="M8.5 15.5 L13 20 L21.5 10.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="sub">Naamã Rodrigues | Vídeos com IA</div></div></div>
+      <div class="st"><span><b>224</b> posts</span><span><b>33,3 mil</b> seguidores</span><span><b>550</b> seguindo</span></div>
+      <div class="bio">Diretor Criativo de IA | Filmes publicitários<br>Te ensino a criar vídeos realistas e motion com IA</div>
+      <div class="lk" id="sOlk"><svg width="20" height="20" viewBox="0 0 20 20"><path d="M8 12 L12 8 M7 9 L5 11 a3 3 0 0 0 4 4 L11 13 M13 11 L15 9 a3 3 0 0 0 -4 -4 L9 7" fill="none" stroke="#9db9ff" stroke-width="2" stroke-linecap="round"/></svg>nr7studio.com.br/black</div>
+      <div class="fw" id="sOfw"><span id="sOf1">Seguir</span><span id="sOf2">Seguindo ✓</span></div>
+    </div></div>
+    <div class="L"><div class="ring" id="sOrip" style="width:90px;height:90px;border-color:#fff"></div></div>
+    <div class="L"><svg id="sOhand" width="96" height="120" viewBox="0 0 96 120"><path d="M34 8 a10 10 0 0 1 20 0 V50 l22 6 a12 12 0 0 1 9 13 l-4 28 a16 16 0 0 1 -16 14 H44 a16 16 0 0 1 -13 -7 L10 74 a9 9 0 0 1 14 -11 l10 10 Z" fill="#fff" stroke="#0B0A0A" stroke-width="5" stroke-linejoin="round"/></svg></div>
+  </div>
+</section>
+
+</div>
+<div id="flash"></div>
+<div id="vig"></div>
+<canvas id="grain"></canvas>
+<div id="tap"><div>▶ TOCAR COM SOM</div></div>
+</div></div>
+
+<div id="hud">
+  <div class="r1"><button id="play">▶ tocar</button><input type="range" id="scrub" min="0" step="0.001" value="0"><span id="tc">0.00s · f0</span></div>
+  <div class="r2">
+    <span>Velocidade</span>
+    <button class="spd on" data-s="1">1x</button><button class="spd" data-s=".5">0.5x</button><button class="spd" data-s=".25">0.25x</button><button class="spd" data-s=".1">0.1x</button>
+    <span class="sep"></span>
+    <button id="prev">◀ frame</button><button id="next">frame ▶</button>
+    <span class="sep"></span>
+    <button id="snd" class="on">som: voz + efeitos</button>
+    <label><input type="checkbox" id="loop" checked> loop</label>
+    <span style="opacity:.55;margin-left:auto">espaço = play · ← → = frame (30fps)</span>
+  </div>
+  <div id="info"><div id="ifala"></div><p id="idesc"></p></div>
+  <div id="chips"></div>
+</div>
+
+<audio id="aMix" preload="auto" src="/*AUDIO_MIX*/"></audio>
+<audio id="aVoz" preload="auto" src="/*AUDIO_VOZ*/"></audio>
+<script>/*GSAP*/</script>
+<script>/*MAIN*/</script>
+</body>
+</html>
