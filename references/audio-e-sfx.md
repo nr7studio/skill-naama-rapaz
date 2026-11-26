@@ -31,7 +31,7 @@ bash scripts/gerar_sfx.sh   # gera 88 arquivos .wav na pasta atual
 ```
 Famílias usadas: `whoosh_*`, `swish_fast`, `dash_air`, `swing_blade`, `sword_swing`, `whip_swish` (movimento); `slam_title`, `boom_deep`, `boom_heavy`, `land_heavy`, `land_soft`, `door_slam`, `thump_appear` (impacto); `pop_soft`, `pop_mouth`, `like_pop`, `bubble_pop` (entradas leves); `tick_wood`, `tick_metal`, `type_light`, `type_mech`, `click_mouse`, `rocker` (interface); `suck_in`, `rise_reverse`, `cymbal_rev` (antes do impacto); `glass_break`, `bulb_burst`, `success_done`, `stopwatch` (pontuais).
 
-Openverse e Real SFX só abrem pelo navegador do Naamã. Usar quando ele pedir um som real específico.
+Fontes de efeitos, sempre as 3, nesta ordem: Openverse (https://openverse.org, só licença `cc0`, via Claude in Chrome no navegador dele), Real SFX (https://github.com/Clipwing/skills/tree/main/skills/real-sfx, por `git clone`) e Earshot (https://github.com/Leonxlnx/earshot, roda local). O Earshot cobre o que o Openverse não tiver. Nunca sintetizar som no código. Se uma fonte não abrir, dizer qual e seguir com as outras.
 
 ## 5. Lista de efeitos
 Cada item: `(tempo, arquivo, ganho em dB, alinhamento)`.

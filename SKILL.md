@@ -113,7 +113,7 @@ ffmpeg -framerate 60 -i frames/f_%05d.png -i audio/mix.wav -c:v libx264 -preset 
 - **Logos de terceiros:** não entram no vídeo, nem a partir de arquivo enviado. Nome da marca em tipografia e ícone genérico. Se ele quiser a logo, encaixa no editor dele. Oferecer os tempos de cada marca.
 - **Interface de programa:** timeline e janelas são genéricas, em shapes nas cores da marca.
 - **After Effects:** não dá para gerar `.aep`. O possível é um script `.jsx` que monta composições com as cenas renderizadas, áudio em camadas e marcadores. Texto e keyframes não ficam editáveis.
-- **Sites de efeitos:** Openverse e Real SFX só abrem pelo navegador dele. O Earshot roda local.
+- **Fontes de efeitos (sempre as 3, nesta ordem):** Openverse (https://openverse.org, só licença `cc0`) só abre pelo navegador dele, via Claude in Chrome. Real SFX (https://github.com/Clipwing/skills/tree/main/skills/real-sfx) entra por `git clone`. Earshot (https://github.com/Leonxlnx/earshot) roda local e cobre o que o Openverse não tiver. Nunca sintetizar som no código. Se uma fonte não abrir, dizer qual e seguir com as outras.
 
 ## Checklist antes de entregar
 
